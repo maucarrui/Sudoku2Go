@@ -59,6 +59,19 @@ func (sudoku *Sudoku) SetValue(x, y, val int) error {
 	return nil
 }
 
+// Returns the value of the sudoku on the row x and column y.
+func (sudoku *Sudoku) GetValue(x, y int) (int, error) {
+	if x < 0 || x > 8 {
+		return 0, errors.New("Sudoku: Invalid row.")
+	}
+
+	if y < 0 || y > 8 {
+		return 0, errors.New("Sudoku: Invalid column.")
+	}
+
+	return sudoku.values[x][y], nil
+}
+
 // Returns the row x of the sudoku as an array of size 9.
 func (sudoku *Sudoku) GetRow(x int) [9]int {
 	var row [9]int
