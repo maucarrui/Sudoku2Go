@@ -136,6 +136,69 @@ func TestSetValue(t *testing.T) {
 	}
 }
 
+func TestGetValue(t *testing.T) {
+	var sudoku Sudoku
+	var val int
+	var err error
+
+	// All initial values of the sudoku should be zero.
+	for i := 0; i < 9; i++ {
+		for j := 0; j < 9; j++ {
+			val, _ = sudoku.GetValue(i, j)
+
+			if val != 0 {
+				t.Errorf("Sudoku: Value should be %d but is %d", 0, val)
+			}
+		}
+	}
+
+	// Set initial values on the first row.
+	for i := 0; i < 9; i++ {
+		sudoku.SetInitialValue(0, i, i+1)
+	}
+
+	// Check that all the values on the first row can be obtained.
+	for i := 0; i < 9; i++ {
+		val, _ = sudoku.GetValue(0, i)
+
+		if val != i+1 {
+			t.Errorf("Sudoku: Value should be %d but is %d", i+1, val)
+		}
+	}
+
+	// Set values on the last row.
+	for i := 0; i < 9; i++ {
+		sudoku.SetValue(8, i, i+1)
+	}
+
+	// Check that all values on the last row can be obtained.
+	for i := 0; i < 9; i++ {
+		val, _ = sudoku.GetValue(8, i)
+
+		if val != i+1 {
+			t.Errorf("Sudoku: Value should be %d but is %d", i+1, val)
+		}
+	}
+
+	// Check that you can't obtain values on invalid rows.
+	for _, val := range [5]int{-2, -10, 10, 100, 50} {
+		_, err = sudoku.GetValue(val, 0)
+
+		if err == nil {
+			t.Errorf("Sudoku: Can obtain value of invalid row %d", val)
+		}
+	}
+
+	// Check that you can't obtain values on invalid columns.
+	for _, val := range [5]int{-2, -10, 10, 100, 50} {
+		_, err = sudoku.GetValue(0, val)
+
+		if err == nil {
+			t.Errorf("Sudoku: Can obtain value of invalid column %d", val)
+		}
+	}
+}
+
 func TestGetRow(t *testing.T) {
 	var sudoku Sudoku
 
