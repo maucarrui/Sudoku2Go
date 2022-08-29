@@ -616,3 +616,87 @@ func TestIsComplete(t *testing.T) {
 		t.Errorf("Sudoku: The following Sudoku returns false when asked if complete: \n%v", sudoku.ToString())
 	}
 }
+
+func TestImportValues(t *testing.T) {
+	var sudoku Sudoku
+	var val1, val2, val3 [81]int
+
+	var zerosRow = [9]int{0, 0, 0, 0, 0, 0, 0, 0, 0}
+	var onesRow = [9]int{1, 1, 1, 1, 1, 1, 1, 1, 1}
+	var validRow = [9]int{1, 2, 3, 4, 5, 6, 7, 8, 9}
+
+	// Fill first array with only 1's.
+	for i := 0; i < 81; i++ {
+		val1[i] = 1
+	}
+
+	// Fill second array with 1-9 in each row.
+	for i := 0; i < 81; i++ {
+		val2[i] = ((i % 9) + 1)
+	}
+
+	// Fill third array the same way as before but only for the first, fifth and
+	// seventh row.
+	for i := 0; i < 81; i++ {
+		val3[i] = 0
+
+		if (i <= 8) || ((i >= 36) && (i < 45)) || ((i >= 54) && (i < 63)) {
+			val3[i] = ((i % 9) + 1)
+		}
+	}
+
+	// Check that the first values can be imported correctly.
+	sudoku.ImportValues(val1)
+	for i := 0; i < 9; i++ {
+		if onesRow != sudoku.GetRow(i) {
+			t.Errorf("Sudoku: Error importing. Row should be %v but is %v", onesRow, sudoku.GetRow(i))
+		}
+	}
+
+	// Check that the second values can be imported correctly.
+	sudoku.Clear()
+	sudoku.ImportValues(val2)
+	for i := 0; i < 9; i++ {
+		if validRow != sudoku.GetRow(i) {
+			t.Errorf("Sudoku: Error importing. Row should be %v but is %v", validRow, sudoku.GetRow(i))
+		}
+	}
+
+	// Check that the third values can be imported correctly.
+	sudoku.Clear()
+	sudoku.ImportValues(val3)
+	for i := 0; i < 9; i++ {
+		if (i == 0) || (i == 4) || (i == 6) {
+			if validRow != sudoku.GetRow(i) {
+				t.Errorf("Sudoku: Error importing. Row should be %v but is %v", validRow, sudoku.GetRow(i))
+			}
+		} else {
+			if zerosRow != sudoku.GetRow(i) {
+				t.Errorf("Sudoku: Error importing. Row should be %v but is %v", zerosRow, sudoku.GetRow(i))
+			}
+		}
+	}
+
+}
+
+func TestClear(t *testing.T) {
+	var sudoku Sudoku
+
+	var zerosRow = [9]int{0, 0, 0, 0, 0, 0, 0, 0, 0}
+
+	// Fill the sudoku with ones.
+	for i := 0; i < 9; i++ {
+		for j := 0; j < 9; j++ {
+			sudoku.SetInitialValue(i, j, 1)
+		}
+	}
+
+	sudoku.Clear()
+
+	// Check the current sudoku has been cleared.
+	for i := 0; i < 9; i++ {
+		if zerosRow != sudoku.GetRow(i) {
+			t.Errorf("Sudoku: Error importing. Row should be %v but is %v", zerosRow, sudoku.GetRow(i))
+		}
+	}
+}
