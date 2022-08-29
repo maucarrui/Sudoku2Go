@@ -232,6 +232,44 @@ func (sudoku *Sudoku) IsComplete() bool {
 	return true
 }
 
+func (sudoku *Sudoku) ImportValues(values [81]int) error {
+	if len(values) != 81 {
+		return errors.New("Error importing values: Not enough values.")
+	}
+
+	val := 0
+	row := 0
+	column := 0
+
+	for k := 0; k < 81; k++ {
+		val = values[k]
+		if val != 0 {
+			err := sudoku.SetInitialValue(row, column, val)
+			if err != nil {
+				return err
+			}
+		}
+
+		if (k+1)%9 == 0 {
+			row++
+			column = 0
+		} else {
+			column++
+		}
+	}
+
+	return nil
+}
+
+func (sudoku *Sudoku) Clear() {
+	for i := 0; i < 9; i++ {
+		for j := 0; j < 9; j++ {
+			sudoku.values[i][j] = 0
+			sudoku.initialValues[i][j] = 0
+		}
+	}
+}
+
 // Prints a part of a grid with (length) squares in a row.
 // Part 1: Upper Grid.
 // Part 2: Middle Grid.
@@ -311,7 +349,14 @@ func (sudoku *Sudoku) ToString() string {
 			}
 
 			sudokuString += "│ "
-			sudokuString += strconv.Itoa(row[j]) + " "
+
+			if row[j] != 0 {
+				sudokuString += strconv.Itoa(row[j])
+			} else {
+				sudokuString += " "
+			}
+
+			sudokuString += " "
 
 			if j == len(row)-1 {
 				sudokuString += "│\n"
