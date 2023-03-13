@@ -1,235 +1,159 @@
-package main
+package model
 
 import (
-	"errors"  // Error handling.
-	"strconv" // String Conversions. (Integer to String)
+	"fmt"                                     // Error formatting.
+	"github.com/maucarrui/Sudoku2Go/internal" // Integer Set structure.
+	"strconv"                                 // String Conversions.
 )
+
+// Alias for Integer set structure.
+type IntSet = internal.IntSet
 
 type Sudoku struct {
 	// All the sudoku values.
 	values [9][9]int
 
-	// The initial sudoku values; you can't modify this ones while playing.
-	initialValues [9][9]int
+	// Row map to keep track of the values contained in each row.
+	rowVals map[int]*IntSet
+
+	// Column map to keep track of the values contained in each column.
+	colVals map[int]*IntSet
+
+	// Block map to keep track of the values contained in each block.
+	blockVals map[int]*IntSet
+
+	// Amount of empty entries in the sudoku.
+	emptyEntries int
 }
 
-// Set an initial value for the sudoku in the cell on the row x and column
-// y. These values can't be modified while playing. Must be between 1 and 9,
-// otherwise an error is returned.
-func (sudoku *Sudoku) SetInitialValue(x, y, val int) error {
-	if x < 0 || x > 8 {
-		return errors.New("Sudoku: Invalid row.")
+// NewSudoku initializes a Sudoku with the given values. The given values are an
+// array of integers, such that (i / 10) and (i % 10) determine the row and
+// column where the values belong in the sudoku, respectively, where i is the
+// index of the value in the array. The value 0 is considered as an empty cell,
+// and thus it should be ignored. The array has to contain exactly 81 elements.
+func NewSudoku(values []int) (*Sudoku, error) {
+	// If the array doesn't have 81 elements, return an error.
+	if len(values) != 81 {
+		err_str := "can't initialize sudoku: need 81 elements, found %d"
+		return nil, fmt.Errorf(err_str, len(values))
 	}
 
-	if y < 0 || y > 8 {
-		return errors.New("Sudoku: Invalid column.")
+	// Initialize an empty sudoku.
+	s := &Sudoku{
+		rowVals:      make(map[int]*IntSet),
+		colVals:      make(map[int]*IntSet),
+		blockVals:    make(map[int]*IntSet),
+		emptyEntries: 81,
 	}
 
-	if val >= 1 && val <= 9 {
-		sudoku.values[x][y] = val
-		sudoku.initialValues[x][y] = val
-	} else {
-		return errors.New("Sudoku: Not a valid entry.")
+	// Initialize an empty set for each row, column, and block map.
+	for i := 0; i < 10; i++ {
+		s.rowVals[i] = internal.NewIntSet()
+		s.colVals[i] = internal.NewIntSet()
+		s.blockVals[i] = internal.NewIntSet()
+	}
+
+	// Insert the values into the sudoku.
+	for i, val := range values {
+		// If the value is 0, ignore it.
+		if val == 0 {
+			continue
+		}
+
+		// Determine the row and column of the value.
+		row := (i / 9)
+		col := (i % 9)
+
+		// Insert the value in the sudoku and check for errors.
+		err := s.SetValue(row, col, val)
+		if err != nil {
+			err_str := "can't initialize sudoku: %w"
+			return nil, fmt.Errorf(err_str, err)
+		}
+	}
+
+	return s, nil
+}
+
+// SetValue sets a value in the sudoku in the given row and column. In case the
+// value is greater than 9 or less than 0, or it is repeated in a row, column or
+// block, return an error.
+func (sudoku *Sudoku) SetValue(row, col, val int) error {
+	// Check for valid row, column, and value.
+	if row < 0 || row > 8 {
+		return fmt.Errorf("invalid row %d", row)
+	}
+
+	if col < 0 || col > 8 {
+		return fmt.Errorf("invalid column %d", col)
+	}
+
+	if val < 1 || val > 9 {
+		return fmt.Errorf("invalid value %d", val)
+	}
+
+	// Check for no repetition on row, column and block.
+	if !sudoku.rowVals[row].Add(val) {
+		return fmt.Errorf("repeated value %d in row %d", val, row)
+	}
+
+	if !sudoku.colVals[col].Add(val) {
+		return fmt.Errorf("repeated value %d in column %d", val, col)
+	}
+
+	block := ((row / 3) * 3) + (col / 3)
+	if !sudoku.blockVals[block].Add(val) {
+		return fmt.Errorf("repeated value %d in block %d", val, block)
+	}
+
+	// If the entry is valid, add it.
+	sudoku.values[row][col] = val
+	sudoku.emptyEntries--
+	return nil
+}
+
+func (sudoku *Sudoku) RemoveValue(row, col int) error {
+	// Check for valid row, column.
+	if row < 0 || row > 8 {
+		return fmt.Errorf("invalid row %d", row)
+	}
+
+	if col < 0 || col > 8 {
+		return fmt.Errorf("invalid column %d", col)
+	}
+
+	// If the entry was non-empty, set it to zero and increase the amount of empty
+	// entries.
+	if sudoku.values[row][col] != 0 {
+		sudoku.values[row][col] = 0
+		sudoku.emptyEntries++
 	}
 
 	return nil
 }
 
-// Set a value for the sudoku in the cell on the row x and column y. Must be
-// between 1 and 9, otherwise an error is returned.
-func (sudoku *Sudoku) SetValue(x, y, val int) error {
-	if x < 0 || x > 8 {
-		return errors.New("Sudoku: Invalid row.")
+// GetValue returns the value of the sudoku found in the given row and column.
+func (sudoku *Sudoku) GetValue(row, col int) (int, error) {
+	if row < 0 || row > 8 {
+		return 0, fmt.Errorf("invalid row %d", row)
 	}
 
-	if y < 0 || y > 8 {
-		return errors.New("Sudoku: Invalid column.")
+	if col < 0 || col > 8 {
+		return 0, fmt.Errorf("invalid column %d", col)
 	}
 
-	if sudoku.initialValues[x][y] != 0 {
-		return errors.New("Sudoku: Can't overwrite initial value.")
-	}
-
-	if val >= 1 && val <= 9 {
-		sudoku.values[x][y] = val
-	} else {
-		return errors.New("Sudoku: Not a valid entry.")
-	}
-
-	return nil
+	return sudoku.values[row][col], nil
 }
 
-// Returns the value of the sudoku on the row x and column y.
-func (sudoku *Sudoku) GetValue(x, y int) (int, error) {
-	if x < 0 || x > 8 {
-		return 0, errors.New("Sudoku: Invalid row.")
-	}
-
-	if y < 0 || y > 8 {
-		return 0, errors.New("Sudoku: Invalid column.")
-	}
-
-	return sudoku.values[x][y], nil
+// GetValues returns the matrix representation of the sudoku, that is, a 9x9
+// matrix.
+func (sudoku *Sudoku) GetValues() [9][9]int {
+	return sudoku.values
 }
 
-// Returns the row x of the sudoku as an array of size 9.
-func (sudoku *Sudoku) GetRow(x int) [9]int {
-	var row [9]int
-
-	for i := 0; i < 9; i++ {
-		row[i] = sudoku.values[x][i]
-	}
-
-	return row
-}
-
-// Returns the column y of the sudoku as an array of size 9.
-func (sudoku *Sudoku) GetColumn(x int) [9]int {
-	var column [9]int
-
-	for i := 0; i < 9; i++ {
-		column[i] = sudoku.values[i][x]
-	}
-
-	return column
-}
-
-// A sudoku consists of 9 blocks, which are 3x3 matrices. The following diagram
-// indicates the enumeration of each block.
-// ╔───┬───┬───╦───┬───┬───╦───┬───┬───╗
-// │           │           │           │
-// ├           ┼           ┼          ─┤
-// │     0     │     1     │     2     │
-// ├           ┼           ┼          ─┤
-// │           │           │           │
-// ╠───┼───┼───╬───┼───┼───╬───┼───┼───╣
-// │           │           │           │
-// ├           ┼           ┼           ┤
-// │     3     │     4     │     5     │
-// ├           ┼           ┼           ┤
-// │           │           │           │
-// ╠───┼───┼───╬───┼───┼───╬───┼───┼───╣
-// │           │           │           │
-// ├           ┼           ┼           ┤
-// │     6     │     7     │     8     │
-// ├           ┼           ┼           ┤
-// │           │           │           │
-// ╚───┴───┴───╩───┴───┴───╩───┴───┴───╝
-// GetBlock returns the content of the the given block as an array of size 9.
-func (sudoku *Sudoku) GetBlock(z int) [9]int {
-	var block [9]int
-	var row, col int
-
-	if z > 5 {
-		row = 2
-	} else if z > 2 {
-		row = 1
-	} else {
-		row = 0
-	}
-
-	col = z % 3
-
-	k := 0
-	for i := 0; i < 3; i++ {
-		for j := 0; j < 3; j++ {
-			block[k] = sudoku.values[(row*3)+i][(col*3)+j]
-			k++
-		}
-	}
-
-	return block
-}
-
-// Returns true if the row x does not contain any repeated values and each value
-// is between 1 and 9. The sum of a valid row will always be (10)(9)/2 = 45, and
-// this value can only be obtained if each value is diferent and between 1 and
-// 9.
-func (sudoku *Sudoku) IsValidRow(x int) bool {
-	sum := 0
-	val := 0
-
-	for i := 0; i < 9; i++ {
-		val = sudoku.values[x][i]
-
-		if val < 1 || val > 9 {
-			return false
-		}
-
-		sum += val
-	}
-
-	return sum == 45
-}
-
-// Returns true if the column y does not contain any repeated values and each
-// value is between 1 and 9. The sum of a valid column will always be (10)(9)/2
-// = 45, and this value can only be obtained if each value is diferent and
-// between 1 and 9.
-func (sudoku *Sudoku) IsValidColumn(y int) bool {
-	sum := 0
-	val := 0
-
-	for i := 0; i < 9; i++ {
-		val = sudoku.values[i][y]
-
-		if val < 1 || val > 9 {
-			return false
-		}
-
-		sum += val
-	}
-
-	return sum == 45
-}
-
-// Returns true if the block z does not contain any repeated values and each
-// value is between 1 and 9. The sum of a valid block will always be (10)(9)/2 =
-// 45, and this value can only be obtained if each value is diferent and between
-// 1 and 9. Reference of the enumerations of blocks on method @GetBlock.
-func (sudoku *Sudoku) IsValidBlock(z int) bool {
-	var row, col int
-
-	if z > 5 {
-		row = 2
-	} else if z > 2 {
-		row = 1
-	} else {
-		row = 0
-	}
-
-	col = z % 3
-
-	sum := 0
-	val := 0
-
-	for i := 0; i < 3; i++ {
-		for j := 0; j < 3; j++ {
-			val = sudoku.values[(row*3)+i][(col*3)+j]
-
-			if val < 1 || val > 9 {
-				return false
-			}
-
-			sum += val
-		}
-	}
-
-	return sum == 45
-}
-
-// A completed sudoku is a Sudoku where all its rows, columns, and blocks are
-// valid.
+// IsComplete returns true if the sudoku all its entries are non-empty.
 func (sudoku *Sudoku) IsComplete() bool {
-	for i := 0; i < 9; i++ {
-		if !sudoku.IsValidRow(i) ||
-			!sudoku.IsValidBlock(i) ||
-			!sudoku.IsValidBlock(i) {
-			return false
-		}
-	}
-
-	return true
+	return sudoku.emptyEntries == 0
 }
 
 // Prints a part of a grid with (length) squares in a row.
