@@ -257,7 +257,7 @@ func TestSetValueNoRepetitionRows(t *testing.T) {
 }
 
 // TestSetValueNoRepetitionColumns tests if SetValue checks properly for no
-// repetition on the rows.
+// repetition on the columns.
 func TestSetValueNoRepetitionColumns(t *testing.T) {
 	emptyEntries := getValidSudokus()[0]
 	err_msg_start := "Sudoku.SetValue: "
@@ -279,7 +279,7 @@ func TestSetValueNoRepetitionColumns(t *testing.T) {
 }
 
 // TestSetValueNoRepetitionBlocks tests if SetValue checks properly for no
-// repetition on the rows.
+// repetition on the blocks.
 func TestSetValueNoRepetitionBlocks(t *testing.T) {
 	emptyEntries := getValidSudokus()[0]
 	err_msg_start := "Sudoku.SetValue: "
