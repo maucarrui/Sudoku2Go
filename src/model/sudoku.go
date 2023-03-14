@@ -125,6 +125,13 @@ func (sudoku *Sudoku) RemoveValue(row, col int) error {
 	// If the entry was non-empty, set it to zero and increase the amount of empty
 	// entries.
 	if sudoku.values[row][col] != 0 {
+		block := ((row / 3) * 3) + (col / 3)
+		val := sudoku.values[row][col]
+
+		sudoku.rowVals[row].Remove(val)
+		sudoku.colVals[col].Remove(val)
+		sudoku.blockVals[block].Remove(val)
+
 		sudoku.values[row][col] = 0
 		sudoku.emptyEntries++
 	}

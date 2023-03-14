@@ -304,5 +304,44 @@ func TestSetValueNoRepetitionBlocks(t *testing.T) {
 		}
 	}
 }
+
+// TestRemoveValue tests if RemoveValue properly removes an entry in the sudoku.
+func TestRemoveValue(t *testing.T) {
+	emptyEntries := getValidSudokus()[0]
+	err_msg_start := "Sudoku.RemoveValue: "
+	err_msg := ""
+
+	sudoku, _ := NewSudoku(emptyEntries)
+	val := 0
+
+	// For every entry, place every possible value, and then remove it.
+	for i := 0; i < 9; i++ {
+		for j := 0; j < 9; j++ {
+			for k := 1; k < 10; k++ {
+				err_msg = err_msg_start
+				err_msg += "unexpected error when setting value: %v"
+				if err := sudoku.SetValue(i, j, k); err != nil {
+					t.Errorf(err_msg, err)
+				}
+
+				err_msg = err_msg_start
+				err_msg += "expected value to be %d but got %d"
+				if val, _ = sudoku.GetValue(i, j); val != k {
+					t.Errorf(err_msg, k, val)
+				}
+
+				err_msg = err_msg_start
+				err_msg += "unexpected error when removing value: %v"
+				if err := sudoku.RemoveValue(i, j); err != nil {
+					t.Errorf(err_msg, err)
+				}
+
+				err_msg = err_msg_start
+				err_msg += "expected value to be %d but got %d"
+				if val, _ = sudoku.GetValue(i, j); val != 0 {
+					t.Errorf(err_msg, 0, val)
+				}
+			}
+		}
 	}
 }
