@@ -147,6 +147,90 @@ func TestNewSudoku(t *testing.T) {
 	}
 }
 
+// TestGetValueValidRows tests if GetValue doesn't return an error when given
+// valid rows.
+func TestGetValueValidRows(t *testing.T) {
+	emptyEntries := getValidSudokus()[0]
+	sudoku, _ := NewSudoku(emptyEntries)
+
+	err_msg := "Sudoku.GetValue: "
+	err_msg += "unexpected error when getting value at row %d: %v"
+
+	for row := 0; row < 9; row++ {
+		if _, err := sudoku.GetValue(row, 0); err != nil {
+			t.Errorf(err_msg, row, err)
+		}
+	}
+}
+
+// TestGetValueInvalidRows tests if GetValue properly returns an error when
+// given invalid rows.
+func TestGetValueInvalidRows(t *testing.T) {
+	emptyEntries := getValidSudokus()[0]
+	sudoku, _ := NewSudoku(emptyEntries)
+
+	err_msg_start := "Sudoku.GetValue: "
+	err_msg := ""
+
+	// Must return an error if row is below 0.
+	err_msg = err_msg_start + "accepts row below 1: %d"
+	for _, row := range []int{-1, -10, -100} {
+		if _, err := sudoku.GetValue(row, 0); err == nil {
+			t.Errorf(err_msg, row)
+		}
+	}
+
+	// Must return an error if row is above 8.
+	err_msg = err_msg_start + "accepts row above 8: %d"
+	for _, row := range []int{9, 10, 100, 20} {
+		if _, err := sudoku.GetValue(row, 0); err == nil {
+			t.Errorf(err_msg, row)
+		}
+	}
+}
+
+// TestGetValueValidColumns tests if GetValue doesn't return an error when given
+// valid columns.
+func TestGetValueValidColumns(t *testing.T) {
+	emptyEntries := getValidSudokus()[0]
+	sudoku, _ := NewSudoku(emptyEntries)
+
+	err_msg := "Sudoku.GetValue: "
+	err_msg += "unexpected error when getting value at column %d: %v"
+
+	for col := 0; col < 9; col++ {
+		if _, err := sudoku.GetValue(0, col); err != nil {
+			t.Errorf(err_msg, col, err)
+		}
+	}
+}
+
+// TestGetValueInvalidColumns tests if GetValue properly returns an error when
+// given invalid columns.
+func TestGetValueInvalidColumns(t *testing.T) {
+	emptyEntries := getValidSudokus()[0]
+	sudoku, _ := NewSudoku(emptyEntries)
+
+	err_msg_start := "Sudoku.GetValue: "
+	err_msg := ""
+
+	// Must return an error if column is below 0.
+	err_msg = err_msg_start + "accepts column below 1: %d"
+	for _, col := range []int{-1, -10, -100} {
+		if _, err := sudoku.GetValue(0, col); err == nil {
+			t.Errorf(err_msg, col)
+		}
+	}
+
+	// Must return an error if row is above 8.
+	err_msg = err_msg_start + "accepts column above 8: %d"
+	for _, col := range []int{9, 10, 100, 20} {
+		if _, err := sudoku.GetValue(0, col); err == nil {
+			t.Errorf(err_msg, col)
+		}
+	}
+}
+
 // TestSetValueInvalidEntries tests if SetValue properly returns an error when
 // given an invalid value, row, or column.
 func TestSetValueInvalidEntries(t *testing.T) {
