@@ -147,9 +147,9 @@ func TestNewSudoku(t *testing.T) {
 	}
 }
 
-// TestSetValue tests if SetValue properly sets a value in sudoku if valid, and
-// if not valid it tests if it returns an error.
-func TestSetValue(t *testing.T) {
+// TestSetValueInvalidEntries tests if SetValue properly returns an error when
+// given an invalid value, row, or column.
+func TestSetValueInvalidEntries(t *testing.T) {
 	emptyEntries := getValidSudokus()[0]
 
 	err_msg_start := "Sudoku.SetValue: "
@@ -173,18 +173,8 @@ func TestSetValue(t *testing.T) {
 		}
 	}
 
-	// Must not return error for a value between 1 and 9.
-	err_msg = err_msg_start
-	err_msg += "doesn't accept values between 1-9: %d "
-	err_msg += "(returned error: %v)"
-	for i := 1; i <= 9; i++ {
-		if err := sudoku.SetValue(0, 0, i); err != nil {
-			t.Errorf(err_msg, i, err)
-		}
-	}
-
 	// Must return an error if we try to write in an invalid row.
-	err_msg = err_msg_start + "invalid row %d is accepted"
+	err_msg = err_msg_start + "invalid row is accepted: %d"
 	for _, val := range [4]int{-1, -2, 10, 11} {
 		if err := sudoku.SetValue(val, 0, 1); err == nil {
 			t.Errorf(err_msg, val)
@@ -192,10 +182,30 @@ func TestSetValue(t *testing.T) {
 	}
 
 	// Must return an error if we try to write in an invalid column.
-	err_msg = err_msg_start + "invalid column %d is accepted"
+	err_msg = err_msg_start + "invalid column is accepted: %d"
 	for _, val := range [4]int{-1, -2, -10, -100} {
 		if err := sudoku.SetValue(0, val, 1); err == nil {
 			t.Errorf(err_msg, val)
+		}
+	}
+}
+
+// TestSetValueValidEntries tests if SetValue doesn't return an error when given
+// valid entries as values, rows, and columns.
+func TestSetValueValidEntries(t *testing.T) {
+	emptyEntries := getValidSudokus()[0]
+	err_msg_start := "Sudoku.SetValue: "
+	err_msg := ""
+
+	sudoku, _ := NewSudoku(emptyEntries)
+
+	// Must not return error for a value between 1 and 9.
+	err_msg = err_msg_start
+	err_msg += "doesn't accept values between 1-9: %d "
+	err_msg += "(returned error: %v)"
+	for i := 1; i <= 9; i++ {
+		if err := sudoku.SetValue(0, 0, i); err != nil {
+			t.Errorf(err_msg, i, err)
 		}
 	}
 
@@ -222,28 +232,77 @@ func TestSetValue(t *testing.T) {
 			t.Errorf(err_msg, i, err)
 		}
 	}
+}
 
-	sudoku, _ = NewSudoku(emptyEntries)
+// TestSetValueNoRepetitionRows tests if SetValue checks properly for no
+// repetition on the rows.
+func TestSetValueNoRepetitionRows(t *testing.T) {
+	emptyEntries := getValidSudokus()[0]
+	err_msg_start := "Sudoku.SetValue: "
+	err_msg := ""
 
-	// Must return an error when writing the same value in the same row.
+	// Check for no repetitions on rows.
 	err_msg = err_msg_start
 	err_msg += "accepts repeated values on rows"
-	sudoku.SetValue(0, 0, 1)
-	if err := sudoku.SetValue(0, 1, 1); err == nil {
-		t.Errorf(err_msg)
-	}
+	for i := 0; i < 10; i++ {
+		sudoku, _ := NewSudoku(emptyEntries)
+		sudoku.SetValue(i, 0, 1)
 
-	// Must return an error when writing the same value in the same column.
+		for j := 1; j < 10; j++ {
+			if err := sudoku.SetValue(i, j, 1); err == nil {
+				t.Errorf(err_msg)
+			}
+		}
+	}
+}
+
+// TestSetValueNoRepetitionColumns tests if SetValue checks properly for no
+// repetition on the rows.
+func TestSetValueNoRepetitionColumns(t *testing.T) {
+	emptyEntries := getValidSudokus()[0]
+	err_msg_start := "Sudoku.SetValue: "
+	err_msg := ""
+
+	// Check for no repetition on columns.
 	err_msg = err_msg_start
 	err_msg += "accepts repeated values on columns"
-	if err := sudoku.SetValue(1, 0, 1); err == nil {
-		t.Errorf(err_msg)
-	}
+	for i := 0; i < 10; i++ {
+		sudoku, _ := NewSudoku(emptyEntries)
+		sudoku.SetValue(0, i, 1)
 
-	// Must return an error when writing the same value in the same block.
+		for j := 1; j < 10; j++ {
+			if err := sudoku.SetValue(j, i, 1); err == nil {
+				t.Errorf(err_msg)
+			}
+		}
+	}
+}
+
+// TestSetValueNoRepetitionBlocks tests if SetValue checks properly for no
+// repetition on the rows.
+func TestSetValueNoRepetitionBlocks(t *testing.T) {
+	emptyEntries := getValidSudokus()[0]
+	err_msg_start := "Sudoku.SetValue: "
+	err_msg := ""
+
+	// Check for no repetition on blocks.
 	err_msg = err_msg_start
 	err_msg += "accepts repeated values on blocks"
-	if err := sudoku.SetValue(2, 2, 1); err == nil {
-		t.Errorf(err_msg)
+	for i := 0; i < 3; i++ {
+		for j := 0; j < 3; j++ {
+			sudoku, _ := NewSudoku(emptyEntries)
+			sudoku.SetValue(i*3, j*3, 1)
+
+			for k := 1; k < 3; k++ {
+				for l := 1; l < 3; l++ {
+					err := sudoku.SetValue((i*3 + k), (j*3 + l), 1)
+					if err == nil {
+						t.Errorf(err_msg)
+					}
+				}
+			}
+		}
+	}
+}
 	}
 }
