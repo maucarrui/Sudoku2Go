@@ -20,18 +20,6 @@ func getValidSudokus() [][]int {
 			0, 0, 0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0, 0, 0, 0},
 
-		// Completed sudoku.
-		{
-			6, 3, 8, 2, 4, 7, 1, 9, 5,
-			4, 2, 5, 8, 1, 9, 7, 6, 3,
-			7, 9, 1, 5, 3, 6, 4, 8, 2,
-			9, 5, 7, 1, 8, 3, 6, 2, 4,
-			3, 8, 2, 7, 6, 4, 9, 5, 1,
-			1, 6, 4, 9, 5, 2, 3, 7, 8,
-			2, 4, 9, 3, 7, 5, 8, 1, 6,
-			8, 7, 6, 4, 2, 1, 5, 3, 9,
-			5, 1, 3, 6, 9, 8, 2, 4, 7},
-
 		// Non-completed sudoku.
 		{
 			6, 0, 8, 0, 4, 0, 1, 0, 5,
@@ -43,6 +31,17 @@ func getValidSudokus() [][]int {
 			2, 0, 9, 3, 0, 5, 0, 1, 0,
 			0, 7, 6, 0, 2, 0, 5, 0, 9,
 			5, 1, 0, 6, 0, 8, 0, 4, 0},
+
+		{
+			6, 3, 8, 2, 4, 7, 1, 9, 5,
+			4, 2, 5, 8, 1, 9, 7, 6, 3,
+			7, 9, 1, 5, 3, 6, 4, 8, 2,
+			9, 5, 7, 1, 8, 3, 6, 2, 4,
+			3, 8, 2, 7, 6, 4, 9, 5, 1,
+			1, 6, 4, 9, 5, 2, 3, 7, 8,
+			2, 4, 9, 3, 7, 5, 8, 0, 6,
+			8, 7, 6, 4, 2, 1, 5, 3, 9,
+			5, 1, 3, 6, 9, 8, 2, 4, 7},
 	}
 
 	return validSudokus
@@ -134,6 +133,25 @@ func getInvalidSudokus() [][]int {
 	}
 
 	return invalidSudokus
+}
+
+// getCompleteSudokus returns an array of completed sudokus.
+func getCompleteSudokus() [][]int {
+	completeSudokus := [][]int{
+		// Completed sudoku.
+		{
+			6, 3, 8, 2, 4, 7, 1, 9, 5,
+			4, 2, 5, 8, 1, 9, 7, 6, 3,
+			7, 9, 1, 5, 3, 6, 4, 8, 2,
+			9, 5, 7, 1, 8, 3, 6, 2, 4,
+			3, 8, 2, 7, 6, 4, 9, 5, 1,
+			1, 6, 4, 9, 5, 2, 3, 7, 8,
+			2, 4, 9, 3, 7, 5, 8, 1, 6,
+			8, 7, 6, 4, 2, 1, 5, 3, 9,
+			5, 1, 3, 6, 9, 8, 2, 4, 7},
+	}
+
+	return completeSudokus
 }
 
 // TestNewSudokuValidValues tests if NewSudoku returns a proper sudoku structure
@@ -477,6 +495,56 @@ func TestRemoveValue(t *testing.T) {
 					t.Errorf(err_msg, 0, val)
 				}
 			}
+		}
+	}
+}
+
+// TestIsCompleteTrueCase tests if IsComplete returns true when given a complete
+// sudoku.
+func TestIsCompleteTrueCase(t *testing.T) {
+	err_msg_start := "Sudoku.IsComplete: "
+	err_msg := ""
+
+	for _, completeSudoku := range getCompleteSudokus() {
+		sudoku, err := NewSudoku(completeSudoku)
+
+		// The values must not be considered invalid.
+		if err != nil {
+			err_msg = err_msg_start
+			err_msg += "valid values returned an error: %v"
+			t.Errorf(err_msg, err)
+		}
+
+		// Check that the sudoku is complete.
+		if !sudoku.IsComplete() {
+			err_msg = err_msg_start
+			err_msg += "the following sudoku is not considered complete: %v"
+			t.Errorf(err_msg, completeSudoku)
+		}
+	}
+}
+
+// TestIsCompleteFalseCase tests if IsComplete returns false when given an
+// incomplete sudoku.
+func TestIsCompleteFalseCase(t *testing.T) {
+	err_msg_start := "Sudoku.IsComplete: "
+	err_msg := ""
+
+	for _, values := range getValidSudokus() {
+		sudoku, err := NewSudoku(values)
+
+		// The values must not be considered invalid.
+		if err != nil {
+			err_msg = err_msg_start
+			err_msg += "valid values returned an error: %v"
+			t.Errorf(err_msg, err)
+		}
+
+		// Check that the sudoku is complete.
+		if sudoku.IsComplete() {
+			err_msg = err_msg_start
+			err_msg += "the following sudoku is considered complete: %v"
+			t.Errorf(err_msg, values)
 		}
 	}
 }
