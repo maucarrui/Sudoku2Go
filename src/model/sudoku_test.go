@@ -112,21 +112,38 @@ func getInvalidSudokus() [][]int {
 			0, 0, 0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0, 0, 0, 0},
+
+		// Less than 81 elements.
+		{
+			0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0},
+
+		// More than 81 elements.
+		{
+			0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0},
 	}
 
 	return invalidSudokus
 }
 
-// TestNewSudoku tests if NewSudoku returns a proper sudoku structure or a
-// proper error.
-func TestNewSudoku(t *testing.T) {
-	err_msg_start := "Sudoku.NewSudoku: "
-	err_msg := ""
+// TestNewSudokuValidValues tests if NewSudoku returns a proper sudoku structure
+// for valid values.
+func TestNewSudokuValidValues(t *testing.T) {
+	err_msg := "Sudoku.NewSudoku: "
+	err_msg += "valid values returned an error: %v "
+	err_msg += "(returned error: %v)"
 
 	// Check that a sudoku is initialized when given a correct array of values.
-	err_msg = err_msg_start
-	err_msg += "valid values %v returned an error "
-	err_msg += "(returned error: %v)"
 	for _, values := range getValidSudokus() {
 		_, err := NewSudoku(values)
 
@@ -134,9 +151,13 @@ func TestNewSudoku(t *testing.T) {
 			t.Errorf(err_msg, values, err)
 		}
 	}
+}
 
+// TestNewSudokuInvalidValues tests if NewSudoku returns an error when given
+// invalid values.
+func TestNewSudokuInvalidValues(t *testing.T) {
 	// Check that when given invalid values, an error is returned.
-	err_msg = err_msg
+	err_msg := "Sudoku.NewSudoku: "
 	err_msg += "invalid values are accepted: %v"
 	for _, values := range getInvalidSudokus() {
 		_, err := NewSudoku(values)
