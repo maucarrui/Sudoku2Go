@@ -410,6 +410,36 @@ func TestSetValueNoRepetitionBlocks(t *testing.T) {
 	}
 }
 
+// TestRemoveValueInvalidRow tests if RemoveValue properly returns an
+// error when given an invalid row as an arguments.
+func TestRemoveValueInvalidRow(t *testing.T) {
+	emptyEntries := getValidSudokus()[0]
+	sudoku, _ := NewSudoku(emptyEntries)
+	err_msg := "Sudoku.RemoveValue: "
+	err_msg += "invalid row returned no error: %d"
+
+	for _, row := range [6]int{-1, -2, 9, 10, 100, -100} {
+		if err := sudoku.RemoveValue(row, 0); err == nil {
+			t.Errorf(err_msg, row)
+		}
+	}
+}
+
+// TestRemoveValueInvalidColumn tests if RemoveValue properly returns an
+// error when given an invalid column as an arguments.
+func TestRemoveValueInvalidColumn(t *testing.T) {
+	emptyEntries := getValidSudokus()[0]
+	sudoku, _ := NewSudoku(emptyEntries)
+	err_msg := "Sudoku.RemoveValue: "
+	err_msg += "invalid column returned no error: %d"
+
+	for _, col := range [6]int{-1, -2, 9, 10, 100, -100} {
+		if err := sudoku.RemoveValue(0, col); err == nil {
+			t.Errorf(err_msg, col)
+		}
+	}
+}
+
 // TestRemoveValue tests if RemoveValue properly removes an entry in the sudoku.
 func TestRemoveValue(t *testing.T) {
 	emptyEntries := getValidSudokus()[0]
