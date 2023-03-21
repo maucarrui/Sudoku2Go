@@ -186,6 +186,43 @@ func TestNewSudokuInvalidValues(t *testing.T) {
 	}
 }
 
+// TestNewSudokuConsistency tests if NewSudoku returns a sudoku which contains
+// the values that were passed.
+func TestNewSudokuConsistency(t *testing.T) {
+	err_msg := "Sudoku.NewSudoku: "
+
+	for _, values := range getValidSudokus() {
+		sudoku, err := NewSudoku(values)
+
+		// The initializing the sudoku must not return an error.
+		if err != nil {
+			err_msg += "valid values return an unexpected error: %v"
+			t.Errorf(err_msg, err)
+			break
+		}
+
+		for i, val := range values {
+			row := (i / 9)
+			col := (i % 9)
+
+			obt_val, err := sudoku.GetValue(row, col)
+
+			// Check for unexpected errors.
+			if err != nil {
+				err_msg += "valid values return an unexpected error: %v"
+				t.Errorf(err_msg, err)
+				break
+			}
+
+			// Check that the obtained value is correct.
+			if val != obt_val {
+				err_msg += "expected value %v but got %v"
+				t.Errorf(err_msg, val, obt_val)
+			}
+		}
+	}
+}
+
 // TestGetValueValidRows tests if GetValue doesn't return an error when given
 // valid rows.
 func TestGetValueValidRows(t *testing.T) {
