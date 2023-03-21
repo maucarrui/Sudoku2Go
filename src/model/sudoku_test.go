@@ -507,8 +507,9 @@ func TestRemoveValueInvalidColumn(t *testing.T) {
 	}
 }
 
-// TestRemoveValue tests if RemoveValue properly removes an entry in the sudoku.
-func TestRemoveValue(t *testing.T) {
+// TestRemoveValueConsistency tests if RemoveValue properly removes an entry in
+// the sudoku.
+func TestRemoveValueConsistency(t *testing.T) {
 	emptyEntries := getValidSudokus()[0]
 	err_msg_start := "Sudoku.RemoveValue: "
 	err_msg := ""
