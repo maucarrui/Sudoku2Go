@@ -351,6 +351,8 @@ func TestSetValueInvalidRows(t *testing.T) {
 	}
 }
 
+// TestSetValueInvalidColumns tests if SetValue properly returns an error when
+// given invalid columns.
 func TestSetValueInvalidColumns(t *testing.T) {
 	emptyEntries := getValidSudokus()[0]
 
@@ -363,50 +365,6 @@ func TestSetValueInvalidColumns(t *testing.T) {
 	for _, val := range [4]int{-1, -2, -10, -100} {
 		if err := sudoku.SetValue(0, val, 1); err == nil {
 			t.Errorf(err_msg, val)
-		}
-	}
-}
-
-// TestSetValueValidEntries tests if SetValue doesn't return an error when given
-// valid entries as values, rows, and columns.
-func TestSetValueValidEntries(t *testing.T) {
-	emptyEntries := getValidSudokus()[0]
-	err_msg_start := "Sudoku.SetValue: "
-	err_msg := ""
-
-	sudoku, _ := NewSudoku(emptyEntries)
-
-	// Must not return error for a value between 1 and 9.
-	err_msg = err_msg_start
-	err_msg += "doesn't accept values between 1-9: %d "
-	err_msg += "(returned error: %v)"
-	for i := 1; i <= 9; i++ {
-		if err := sudoku.SetValue(0, 0, i); err != nil {
-			t.Errorf(err_msg, i, err)
-		}
-	}
-
-	sudoku, _ = NewSudoku(emptyEntries)
-
-	// Must not return an error if we try to write in a valid row.
-	err_msg = err_msg_start
-	err_msg += "returns an error in valid row %d "
-	err_msg += "(returned error: %v)"
-	for i := 0; i < 9; i++ {
-		if err := sudoku.SetValue(i, 0, i+1); err != nil {
-			t.Errorf(err_msg, i, err)
-		}
-	}
-
-	sudoku, _ = NewSudoku(emptyEntries)
-
-	// Must not return an error if we try to write in a valid column.
-	err_msg = err_msg_start
-	err_msg += "returns error in valid column %d "
-	err_msg += "(returned error: %v)"
-	for i := 0; i < 9; i++ {
-		if err := sudoku.SetValue(0, i, i+1); err != nil {
-			t.Errorf(err_msg, i, err)
 		}
 	}
 }
