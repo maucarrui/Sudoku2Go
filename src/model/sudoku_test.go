@@ -599,6 +599,32 @@ func TestIsCompleteFalseCase(t *testing.T) {
 	}
 }
 
+// TestIsCompleteMultipleAdditions tests if IsComplete returns false even when
+// adding the same element 81 times.
+func TestIsCompleteMultipleAdditions(t *testing.T) {
+	emptyEntries := getValidSudokus()[0]
+	err_msg := "Sudoku.IsComplete: "
+	sudoku, err := NewSudoku(emptyEntries)
+
+	// Check for unexpected errors.
+	if err != nil {
+		err_msg += "unexpected error when initializing sudoku: %v"
+		t.Errorf(err_msg, err)
+	}
+
+	// Add 81 times the same element to the same entry, the sudoku should not be
+	// considered complete.
+	for i := 0; i < 81; i++ {
+		sudoku.SetValue(0, 0, 1)
+	}
+
+	if sudoku.IsComplete() {
+		err_msg += "incomplete sudoku is considered complete"
+		err_msg += "after adding the same element 81 times"
+		t.Errorf(err_msg)
+	}
+}
+
 // TestGetValuesConsistency tests if GetValues returns the values of the sudoku
 // in the proper order.
 func TestGetValuesConsistency(t *testing.T) {
