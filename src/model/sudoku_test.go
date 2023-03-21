@@ -625,6 +625,46 @@ func TestIsCompleteMultipleAdditions(t *testing.T) {
 	}
 }
 
+// TestIsCompleteMultipleRemovals tests if IsComplete returns true even when
+// removing the same element 81 times, and then simply adding it.
+func TestIsCompleteMultipleRemovals(t *testing.T) {
+	completeEntries := getCompleteSudokus()[0]
+	err_msg := "Sudoku.IsComplete: "
+	sudoku, err := NewSudoku(completeEntries)
+
+	// Check for unexpected errors.
+	if err != nil {
+		err_msg += "unexpected error when initializing sudoku: %v"
+		t.Errorf(err_msg, err)
+	}
+
+	// Remove 81 times the same entry, the sudoku should not be considered
+	// complete.
+	for i := 0; i < 81; i++ {
+		sudoku.RemoveValue(0, 0)
+	}
+
+	if sudoku.IsComplete() {
+		err_msg += "incomplete sudoku is considered complete"
+		err_msg += "after removing the same element 81 times"
+		t.Errorf(err_msg)
+	}
+
+	// Add the removed entry and the sudoku should be considered complete.
+	if err := sudoku.SetValue(0, 0, completeEntries[0]); err != nil {
+		err_msg += "unexpected error when adding element %d at (%d, %d) : %v"
+		t.Errorf(err_msg, completeEntries[0], 0, 0, err)
+	}
+
+	// The sudoku should be complete.
+	if !sudoku.IsComplete() {
+		err_msg += "removed the same element 81 times, "
+		err_msg += "and after adding it again the sudoku "
+		err_msg += "should be considered complete, but it isn't"
+		t.Errorf(err_msg)
+	}
+}
+
 // TestGetValuesConsistency tests if GetValues returns the values of the sudoku
 // in the proper order.
 func TestGetValuesConsistency(t *testing.T) {
