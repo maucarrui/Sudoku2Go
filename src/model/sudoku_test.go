@@ -598,3 +598,32 @@ func TestIsCompleteFalseCase(t *testing.T) {
 		}
 	}
 }
+
+// TestGetValuesConsistency tests if GetValues returns the values of the sudoku
+// in the proper order.
+func TestGetValuesConsistency(t *testing.T) {
+	complete := getCompleteSudokus()[0]
+	err_msg := "Sudoku.GetValues: "
+
+	sudoku, err := NewSudoku(complete)
+
+	// Check for an unexpected error.
+	if err != nil {
+		err_msg += "unexpected error when initializing sudoku: %v"
+		t.Errorf(err_msg, err)
+	}
+
+	// Check that the obtained values match the expected.
+	obt_values := sudoku.GetValues()
+	for i, val := range complete {
+		row := (i / 9)
+		col := (i % 9)
+
+		obt_val := obt_values[row][col]
+
+		if obt_val != val {
+			err_msg += "expected value %d at (%d, %d) but got %d"
+			t.Errorf(err_msg, val, row, col, obt_val)
+		}
+	}
+}
