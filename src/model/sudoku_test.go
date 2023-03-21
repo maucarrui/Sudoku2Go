@@ -440,6 +440,43 @@ func TestSetValueNoRepetitionBlocks(t *testing.T) {
 	}
 }
 
+// TestSetValueConsistency tests if SetValue properly sets a value in the
+// sudoku.
+func TestSetValueConsistency(t *testing.T) {
+	emptyEntries := getValidSudokus()[0]
+	err_msg := "Sudoku.SetValue: "
+	sudoku, err := NewSudoku(emptyEntries)
+
+	// Check for unexpected error when initializing.
+	if err != nil {
+		err_msg += "unexpected error when initializing sudoku: %v"
+		t.Errorf(err_msg, err)
+	}
+
+	for i := 0; i < 9; i++ {
+		// Check for unexpected errors.
+		if err := sudoku.SetValue(i, i, i+1); err != nil {
+			err_msg += "unexpected error when setting value: %v"
+			t.Errorf(err_msg, err)
+			break
+		}
+
+		// Check that the placed value matches the expected.
+		obt_val, err := sudoku.GetValue(i, i)
+		if err != nil {
+			err_msg += "unexpected error when obtaining value: %v"
+			t.Errorf(err_msg, err)
+			break
+		}
+
+		if obt_val != (i + 1) {
+			err_msg += "expected value %d but got %d"
+			t.Errorf(err_msg, (i + 1), obt_val)
+			break
+		}
+	}
+}
+
 // TestRemoveValueInvalidRow tests if RemoveValue properly returns an
 // error when given an invalid row as an arguments.
 func TestRemoveValueInvalidRow(t *testing.T) {
