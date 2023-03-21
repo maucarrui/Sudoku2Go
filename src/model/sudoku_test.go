@@ -307,42 +307,59 @@ func TestGetValueInvalidColumns(t *testing.T) {
 	}
 }
 
-// TestSetValueInvalidEntries tests if SetValue properly returns an error when
-// given an invalid value, row, or column.
-func TestSetValueInvalidEntries(t *testing.T) {
+// TestSetValueInvalidValues tests if SetValue properly returns an error when
+// given invalid values.
+func TestSetValueInvalidValues(t *testing.T) {
 	emptyEntries := getValidSudokus()[0]
 
-	err_msg_start := "Sudoku.SetValue: "
-	err_msg := ""
+	err_msg := "Sudoku.SetValue: "
 
 	sudoku, _ := NewSudoku(emptyEntries)
 
-	// Must return error if value is below 1.
-	err_msg = err_msg_start + "accepts values below 1: %d"
-	for _, val := range [4]int{0, -10, -40, -100} {
+	// Must return an error if value is below 1.
+	err_msg += "accepts values below 1: %d"
+	for _, val := range []int{0, -10, -40, -100} {
 		if err := sudoku.SetValue(0, 0, val); err == nil {
 			t.Errorf(err_msg, val)
 		}
 	}
 
-	// Must return error if value is above 9.
-	err_msg = err_msg_start + "accepts values below 9: %d"
-	for _, val := range [4]int{10, 100, 20, 34} {
+	// Must return an error if value is above 9.
+	err_msg += "accepts values above 9: %d"
+	for _, val := range []int{10, 100, 20, 34} {
 		if err := sudoku.SetValue(0, 0, val); err == nil {
 			t.Errorf(err_msg, val)
 		}
 	}
+}
+
+// TestSetValueInvalidRows tests if SetValue properly returns an error when
+// given invalid rows.
+func TestSetValueInvalidRows(t *testing.T) {
+	emptyEntries := getValidSudokus()[0]
+
+	err_msg := "Sudoku.SetValue: "
+
+	sudoku, _ := NewSudoku(emptyEntries)
 
 	// Must return an error if we try to write in an invalid row.
-	err_msg = err_msg_start + "invalid row is accepted: %d"
-	for _, val := range [4]int{-1, -2, 10, 11} {
+	err_msg += "invalid row is accepted: %d"
+	for _, val := range []int{-1, -2, 10, 11} {
 		if err := sudoku.SetValue(val, 0, 1); err == nil {
 			t.Errorf(err_msg, val)
 		}
 	}
+}
+
+func TestSetValueInvalidColumns(t *testing.T) {
+	emptyEntries := getValidSudokus()[0]
+
+	err_msg := "Sudoku.SetValue: "
+
+	sudoku, _ := NewSudoku(emptyEntries)
 
 	// Must return an error if we try to write in an invalid column.
-	err_msg = err_msg_start + "invalid column is accepted: %d"
+	err_msg += "invalid column is accepted: %d"
 	for _, val := range [4]int{-1, -2, -10, -100} {
 		if err := sudoku.SetValue(0, val, 1); err == nil {
 			t.Errorf(err_msg, val)
