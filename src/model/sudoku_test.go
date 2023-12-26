@@ -477,6 +477,33 @@ func TestSetValueConsistency(t *testing.T) {
 	}
 }
 
+// Tests that SetValue properly works when first trying to place an invalid
+// value, and then placing a valid value in the same row.
+func TestSetValueInvalidPlacementThenValidPlacement(t *testing.T) {
+	nonCompleteSudoku := getValidSudokus()[1]
+	err_msg := "Sudoku.SetValue: "
+	sudoku, err := NewSudoku(nonCompleteSudoku)
+
+	// Check for unexpected error when initializing.
+	if err != nil {
+		err_msg += "unexpected error when initializing sudoku: %v"
+		t.Errorf(err_msg, err)
+	}
+
+	// Try to place a value in an invalid position.
+	if err := sudoku.SetValue(1, 2, 7); err == nil {
+		err_msg += "expected an error when placing an invalid value"
+		t.Errorf(err_msg)
+		return
+	}
+
+	// Then place the same value but in a valid position.
+	if err := sudoku.SetValue(5, 2, 7); err != nil {
+		err_msg += "unexpected error when setting valid value: %v"
+		t.Errorf(err_msg, err)
+	}
+}
+
 // TestRemoveValueInvalidRow tests if RemoveValue properly returns an
 // error when given an invalid row as an arguments.
 func TestRemoveValueInvalidRow(t *testing.T) {

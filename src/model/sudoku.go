@@ -93,20 +93,23 @@ func (sudoku *Sudoku) SetValue(row, col, val int) error {
 	}
 
 	// Check for no repetition on row, column and block.
-	if !sudoku.rowVals[row].Add(val) {
+	if sudoku.rowVals[row].Contains(val) {
 		return fmt.Errorf("repeated value %d in row %d", val, row)
 	}
 
-	if !sudoku.colVals[col].Add(val) {
+	if sudoku.colVals[col].Contains(val) {
 		return fmt.Errorf("repeated value %d in column %d", val, col)
 	}
 
 	block := ((row / 3) * 3) + (col / 3)
-	if !sudoku.blockVals[block].Add(val) {
+	if sudoku.blockVals[block].Contains(val) {
 		return fmt.Errorf("repeated value %d in block %d", val, block)
 	}
 
 	// If the entry is valid, add it.
+	sudoku.rowVals[row].Add(val)
+	sudoku.colVals[col].Add(val)
+	sudoku.blockVals[block].Add(val)
 	sudoku.values[row][col] = val
 	sudoku.emptyEntries--
 	return nil
