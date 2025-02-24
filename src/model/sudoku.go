@@ -3,7 +3,6 @@ package model
 import (
 	"fmt"                                     // Error formatting.
 	"github.com/maucarrui/Sudoku2Go/internal" // Integer Set structure.
-	"strconv"                                 // String Conversions.
 )
 
 // Alias for Integer set structure.
@@ -31,11 +30,12 @@ type Sudoku struct {
 // column where the values belong in the sudoku, respectively, where i is the
 // index of the value in the array. The value 0 is considered as an empty cell,
 // and thus it should be ignored. The array has to contain exactly 81 elements.
-func NewSudoku(values []int) (*Sudoku, error) {
+func NewSudoku(values []int) (*Sudoku, *SudokuError) {
 	// If the array doesn't have 81 elements, return an error.
 	if len(values) != 81 {
-		err_str := "can't initialize sudoku: need 81 elements, found %d"
-		return nil, fmt.Errorf(err_str, len(values))
+		return nil, NewSudokuError().
+			SetErrorType(INVALID_SUDOKU).
+			SetErrorMessage(fmt.Sprintf("Need 81 elements, found %d", len(values)))
 	}
 
 	// Initialize an empty sudoku.
@@ -67,8 +67,10 @@ func NewSudoku(values []int) (*Sudoku, error) {
 		// Insert the value in the sudoku and check for errors.
 		err := s.SetValue(row, col, val)
 		if err != nil {
-			err_str := "can't initialize sudoku: %w"
-			return nil, fmt.Errorf(err_str, err)
+			return nil, NewSudokuError().
+				SetErrorType(INVALID_SUDOKU).
+				SetStackError(err).
+				SetErrorMessage("Invalid Sudoku")
 		}
 	}
 
@@ -78,32 +80,53 @@ func NewSudoku(values []int) (*Sudoku, error) {
 // SetValue sets a value in the sudoku in the given row and column. In case the
 // value is greater than 9 or less than 0, or it is repeated in a row, column or
 // block, return an error.
-func (sudoku *Sudoku) SetValue(row, col, val int) error {
+func (sudoku *Sudoku) SetValue(row, col, val int) *SudokuError {
 	// Check for valid row, column, and value.
 	if row < 0 || row > 8 {
-		return fmt.Errorf("invalid row %d", row)
+		return NewSudokuError().
+			SetErrorType(INVALID_ROW).
+			SetErrorMessage(fmt.Sprintf("Invalid row %d", row))
 	}
 
 	if col < 0 || col > 8 {
-		return fmt.Errorf("invalid column %d", col)
+		return NewSudokuError().
+			SetErrorType(INVALID_COLUMN).
+			SetErrorMessage(fmt.Sprintf("Invalid column %d", col))
 	}
 
 	if val < 1 || val > 9 {
-		return fmt.Errorf("invalid value %d", val)
+		return NewSudokuError().
+			SetErrorType(INVALID_VALUE).
+			SetErrorMessage(fmt.Sprintf("Invalid value %d", val))
 	}
 
 	// Check for no repetition on row, column and block.
 	if sudoku.rowVals[row].Contains(val) {
-		return fmt.Errorf("repeated value %d in row %d", val, row)
+		conflictColumn := sudoku.findConflictingColumn(row, val)
+		return NewSudokuError().
+			SetErrorType(REPEATED_VALUE).
+			SetConflictRow(row).
+			SetConflictColumn(conflictColumn).
+			SetErrorMessage(fmt.Sprintf("Repeated value %d", val))
 	}
 
 	if sudoku.colVals[col].Contains(val) {
-		return fmt.Errorf("repeated value %d in column %d", val, col)
+		conflictRow := sudoku.findConflictingRow(col, val)
+		return NewSudokuError().
+			SetErrorType(REPEATED_VALUE).
+			SetConflictRow(conflictRow).
+			SetConflictColumn(col).
+			SetErrorMessage(fmt.Sprintf("Repeated value %d", val))
 	}
 
 	block := ((row / 3) * 3) + (col / 3)
 	if sudoku.blockVals[block].Contains(val) {
-		return fmt.Errorf("repeated value %d in block %d", val, block)
+		conflictRow, conflictColumn := sudoku.findConflictingRowAndColumn(block, val)
+		return NewSudokuError().
+			SetErrorType(REPEATED_VALUE).
+			SetConflictRow(conflictRow).
+			SetConflictColumn(conflictColumn).
+			SetErrorMessage(fmt.Sprintf("Repeated value %d", val))
 	}
 
 	// If the entry is valid, add it.
@@ -115,14 +138,18 @@ func (sudoku *Sudoku) SetValue(row, col, val int) error {
 	return nil
 }
 
-func (sudoku *Sudoku) RemoveValue(row, col int) error {
+func (sudoku *Sudoku) RemoveValue(row, col int) *SudokuError {
 	// Check for valid row, column.
 	if row < 0 || row > 8 {
-		return fmt.Errorf("invalid row %d", row)
+		return NewSudokuError().
+			SetErrorType(INVALID_ROW).
+			SetErrorMessage(fmt.Sprintf("Invalid row %d", row))
 	}
 
 	if col < 0 || col > 8 {
-		return fmt.Errorf("invalid column %d", col)
+		return NewSudokuError().
+			SetErrorType(INVALID_COLUMN).
+			SetErrorMessage(fmt.Sprintf("Invalid column %d", col))
 	}
 
 	// If the entry was non-empty, set it to zero and increase the amount of empty
@@ -143,13 +170,17 @@ func (sudoku *Sudoku) RemoveValue(row, col int) error {
 }
 
 // GetValue returns the value of the sudoku found in the given row and column.
-func (sudoku *Sudoku) GetValue(row, col int) (int, error) {
+func (sudoku *Sudoku) GetValue(row, col int) (int, *SudokuError) {
 	if row < 0 || row > 8 {
-		return 0, fmt.Errorf("invalid row %d", row)
+		return 0, NewSudokuError().
+			SetErrorType(INVALID_ROW).
+			SetErrorMessage(fmt.Sprintf("Invalid row %d", row))
 	}
 
 	if col < 0 || col > 8 {
-		return 0, fmt.Errorf("invalid column %d", col)
+		return 0, NewSudokuError().
+			SetErrorType(INVALID_COLUMN).
+			SetErrorMessage(fmt.Sprintf("Invalid column %d", col))
 	}
 
 	return sudoku.values[row][col], nil
@@ -166,99 +197,34 @@ func (sudoku *Sudoku) IsComplete() bool {
 	return sudoku.emptyEntries == 0
 }
 
-// Prints a part of a grid with (length) squares in a row.
-// Part 1: Upper Grid.
-// Part 2: Middle Grid.
-// Part 3: Bottom Grid.
-func printGridPart(part, length int, delim bool) string {
-	var gridString string
-
-	switch part {
-	case 1:
-		gridString = "╔"
-	case 2:
-		if delim {
-			gridString = "╠"
-		} else {
-			gridString = "├"
-		}
-	case 3:
-		gridString = "╚"
-	}
-
-	for i := 0; i < length; i++ {
-		gridString += "───"
-
-		if i < (length - 1) {
-			if delim && (i+1)%3 == 0 {
-				switch part {
-				case 1:
-					gridString += "╦"
-				case 2:
-					gridString += "╬"
-				case 3:
-					gridString += "╩"
-				}
-			} else {
-				switch part {
-				case 1:
-					gridString += "┬"
-				case 2:
-					gridString += "┼"
-				case 3:
-					gridString += "┴"
-				}
-			}
-		} else {
-			switch part {
-			case 1:
-				gridString += "╗"
-			case 2:
-				if delim {
-					gridString += "╣"
-				} else {
-					gridString += "┤"
-				}
-			case 3:
-				gridString += "╝"
-			}
+func (sudoku *Sudoku) findConflictingColumn(row, value int) int {
+	for col := 0; col < 9; col++ {
+		if sudoku.values[row][col] == value {
+			return col
 		}
 	}
-
-	return gridString
+	return -1
 }
 
-// Returns the given sudoku in String format.
-func (sudoku *Sudoku) ToString() string {
-	var delim bool
-	sudokuString := printGridPart(1, 9, true) + "\n"
-
-	for i, row := range sudoku.values {
-
-		// Print the current row values.
-		for j := 0; j < len(row); j++ {
-
-			if (i+1)%3 == 0 {
-				delim = true
-			} else {
-				delim = false
-			}
-
-			sudokuString += "│ "
-			sudokuString += strconv.Itoa(row[j]) + " "
-
-			if j == len(row)-1 {
-				sudokuString += "│\n"
-			}
-		}
-
-		// Depending on the row, print the corresponding grid part.
-		if i < 8 {
-			sudokuString += printGridPart(2, 9, delim) + "\n"
-		} else {
-			sudokuString += printGridPart(3, 9, delim) + "\n"
+func (sudoku *Sudoku) findConflictingRow(col, value int) int {
+	for row := 0; row < 9; row++ {
+		if sudoku.values[row][col] == value {
+			return row
 		}
 	}
+	return -1
+}
 
-	return sudokuString
+func (sudoku *Sudoku) findConflictingRowAndColumn(block, value int) (int, int) {
+	row := (block / 3) * 3
+	col := (block % 3) * 3
+
+	for i := 0; i < 3; i++ {
+		for j := 0; j < 3; j++ {
+			if sudoku.values[row+i][col+j] == value {
+				return row + i, col + j
+			}
+		}
+	}
+	return -1, -1
 }

@@ -1,13 +1,17 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	tea "github.com/charmbracelet/bubbletea"
+	ui "github.com/maucarrui/Sudoku2Go/src/ui"
+	"os"
+)
 
 func main() {
-	var s Sudoku
+	program := tea.NewProgram(ui.NewGame(), tea.WithAltScreen())
 
-	for i := 0; i < 9; i++ {
-		s.SetInitialValue(i, i, 1)
+	if _, err := program.Run(); err != nil {
+		fmt.Printf("An error occurred during execution: %v", err)
+		os.Exit(1)
 	}
-
-	fmt.Println(s.ToString())
 }
