@@ -13,7 +13,7 @@ func (game Game) Init() tea.Cmd {
 func (game Game) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// Define the keys to exit the game.
 	exitKeys := internal.NewStringSetFromValues(
-		[]string{"ctrl+c", "q"},
+		[]string{"ctrl+c", "q", "esc"},
 	)
 
 	// Define the keys to move the cursor.
@@ -39,6 +39,13 @@ func (game Game) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		},
 	)
 
+	// Define the keys to enable/disable blinking cursor.
+	blinkingKeys := internal.NewStringSetFromValues(
+		[]string{
+			"t",
+		},
+	)
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		key := msg.String()
@@ -56,6 +63,8 @@ func (game Game) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else if deleteKeys.Contains(key) {
 			// Delete the value where the cursor is currently on.
 			game.RemoveValue()
+		} else if blinkingKeys.Contains(key) {
+			game.blinking = !game.blinking
 		} else {
 			// Default scenario.
 			game.message = "Not entering any scenario for key: " + key
@@ -83,7 +92,9 @@ func (game Game) View() string {
 
 	sudoku = sudokuStyle(sudoku)
 
-	instructions := instructionsStyle(PrintInstructions())
+	instructions := instructionsStyle(
+		RulesToString() + "\n\n" + ControlsToString(game),
+	)
 
 	return lipgloss.JoinHorizontal(lipgloss.Center, instructions, sudoku)
 }

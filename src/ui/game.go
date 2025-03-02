@@ -22,6 +22,9 @@ type Game struct {
 	error         *SudokuError
 	message       string
 	timer         stopwatch.Model
+
+	// User Interface specifics.
+	blinking bool
 }
 
 func NewGame() Game {

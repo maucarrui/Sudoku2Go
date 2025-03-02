@@ -116,6 +116,7 @@ func PrintGame(game Game) string {
 	sudoku := game.sudoku
 	initialSudoku := game.initialSudoku
 	error := game.error
+	blinking := game.blinking
 
 	conflict_x := -1
 	conflict_y := -1
@@ -149,9 +150,17 @@ func PrintGame(game Game) string {
 
 			if (cursor_x == j) && (cursor_y == i) {
 				if row[j] != 0 {
-					sudokuString += selectedValueStyle(strValue)
+					if blinking {
+						sudokuString += selectedValueStyleBlinking(strValue)
+					} else {
+						sudokuString += selectedValueStyle(strValue)
+					}
 				} else {
-					sudokuString += selectedValueStyle("█")
+					if blinking {
+						sudokuString += selectedValueStyleBlinking("█")
+					} else {
+						sudokuString += selectedValueStyle("█")
+					}
 				}
 			} else if (conflict_x == j) && (conflict_y == i) {
 				sudokuString += conflictValueStyle(strValue)
@@ -186,20 +195,36 @@ func PrintGame(game Game) string {
 	return sudokuString
 }
 
-func PrintInstructions() string {
+func BlinkingEnabledToString(game Game) string {
+	str := "(Blinking: "
+	if game.blinking {
+		str += blinkingEnabledStyle("Enabled") + " )"
+	} else {
+		str += blinkingDisabledStyle("Disabled") + ")"
+	}
+	return str
+}
 
-	instructions := "Instructions: \n\n"
-	instructions += "A Sudoku is 9x9 board whose values range from 1 to 9. \n\n"
-	instructions += "Each row, column, and 3x3 square contained inside "
-	instructions += "the board should have the number 1 through 9. \n\n"
-	instructions += "No repetitions are allowed."
+func RulesToString() string {
+	rules := "Rules: \n\n"
+	rules += "A Sudoku is 9x9 board whose values range from 1 to 9. \n\n"
+	rules += "Each row, column, and 3x3 square contained inside "
+	rules += "the board shall have the number 1 through 9. \n\n"
+	rules += "No repetitions are allowed."
 
+	return rules
+}
+
+func ControlsToString(game Game) string {
 	controls := "Controls: \n\n"
+	controls += "Place a number using the 1-9 keys.\n\n"
 	controls += "Up:    Ctrl+p, Up Arrow \n"
 	controls += "Down:  Ctrl+n, Down Arrow \n"
 	controls += "Left:  Ctrl+b, Left Arrow \n"
-	controls += "Right: Ctrl+f, Right Arrow \n"
-	controls += "Quit:  Ctrl+q, q \n"
+	controls += "Right: Ctrl+f, Right Arrow \n\n"
+	controls += "Toggle blinking cursor: t\n"
+	controls += "  " + BlinkingEnabledToString(game) + "\n\n"
+	controls += "Quit:  Ctrl+q, q, Escape \n"
 
-	return instructions + "\n\n" + controls
+	return controls
 }

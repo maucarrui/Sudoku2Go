@@ -6,6 +6,10 @@ import (
 
 var selectedValueStyle = lipgloss.NewStyle().
 	Bold(true).
+	Render
+
+var selectedValueStyleBlinking = lipgloss.NewStyle().
+	Bold(true).
 	Blink(true).
 	Render
 
@@ -30,6 +34,16 @@ var conflictValueStyle = lipgloss.NewStyle().
 var sudokuStyle = lipgloss.NewStyle().
 	Width(60).
 	Padding(5).
+	Render
+
+var blinkingEnabledStyle = lipgloss.NewStyle().
+	Bold(true).
+	Foreground(lipgloss.Color("#ebcb8b")).
+	Render
+
+var blinkingDisabledStyle = lipgloss.NewStyle().
+	Bold(true).
+	Foreground(lipgloss.Color("#4c566a")).
 	Render
 
 var instructionsStyle = lipgloss.NewStyle().
