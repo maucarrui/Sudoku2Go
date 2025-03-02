@@ -8,6 +8,17 @@ import (
 
 type Duration = time.Duration
 
+// Returns a string representation of the given time unit.
+// If the time unit is less than "10", a zero is appended to the beginning
+// of the string.
+func timeUnitToString(timeUnit int) string {
+	str := ""
+	if timeUnit < 10 {
+		str += "0"
+	}
+	return str + strconv.Itoa(timeUnit)
+}
+
 func PrintElapsedTime(elapsedTime Duration) string {
 	elapsedSeconds := elapsedTime.Seconds()
 
@@ -15,24 +26,9 @@ func PrintElapsedTime(elapsedTime Duration) string {
 	minutes := int(math.Mod(elapsedSeconds/60, 60))
 	hours := int((elapsedSeconds / 60) / 60)
 
-	ss := ""
-	mm := ""
-	hh := ""
-
-	if seconds < 10 {
-		ss += "0"
-	}
-	ss += strconv.Itoa(seconds)
-
-	if minutes < 10 {
-		mm += "0"
-	}
-	mm += strconv.Itoa(minutes)
-
-	if hours < 10 {
-		hh += "0"
-	}
-	hh += strconv.Itoa(hours)
+	ss := timeUnitToString(seconds)
+	mm := timeUnitToString(minutes)
+	hh := timeUnitToString(hours)
 
 	return hh + ":" + mm + ":" + ss
 }
