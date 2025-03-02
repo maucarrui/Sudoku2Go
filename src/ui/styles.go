@@ -6,6 +6,7 @@ import (
 
 var selectedValueStyle = lipgloss.NewStyle().
 	Bold(true).
+	Blink(true).
 	Render
 
 var initialValueStyle = lipgloss.NewStyle().

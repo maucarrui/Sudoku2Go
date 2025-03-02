@@ -155,7 +155,7 @@ func PrintGame(game Game) string {
 				if row[j] != 0 {
 					sudokuString += selectedValueStyle(strValue)
 				} else {
-					sudokuString += "█"
+					sudokuString += selectedValueStyle("█")
 				}
 			} else if (conflict_x == j) && (conflict_y == i) {
 				sudokuString += conflictValueStyle(strValue)
