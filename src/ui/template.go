@@ -3,6 +3,7 @@ package ui
 import (
 	"math"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -33,84 +34,59 @@ func PrintElapsedTime(elapsedTime Duration) string {
 	return hh + ":" + mm + ":" + ss
 }
 
-// Prints a part of a grid with (length) squares in a row.
-// Part 1: Upper Grid.
-// Part 2: Middle Grid.
-// Part 3: Bottom Grid.
-func printGridPart(part, length int, delim bool) string {
-	var gridString string
+func gridToString(gridStructure string) string {
+	// Cast the string to a rune array for easier UTF-8 handling.
+	runes := []rune(gridStructure)
 
-	switch part {
-	case 1:
-		gridString = "╔"
-	case 2:
-		if delim {
-			gridString = "╠"
-		} else {
-			gridString = "║"
-		}
-	case 3:
-		gridString = "╚"
-	}
+	start := runes[0]
+	number := runes[1]
+	numberSeparator := runes[2]
+	blockSeparator := runes[3]
+	end := runes[4]
 
-	for i := 0; i < length; i++ {
-		if delim {
-			gridString += "═══"
-		} else {
-			gridString += "───"
+	var gridBuilder strings.Builder
+	gridBuilder.WriteRune(start)
+	for i := 0; i < 9; i++ {
+
+		// Each number takes a total of 3 characters.
+		for j := 0; j < 3; j++ {
+			gridBuilder.WriteRune(number)
 		}
 
-		if i < (length - 1) {
-			switch part {
-			case 1:
-				if (i+1)%3 == 0 {
-					gridString += "╦"
-				} else {
-					gridString += "═"
-				}
-
-			case 2:
-				if delim && (i+1)%3 == 0 {
-					gridString += "╬"
-				} else if (i+1)%3 == 0 {
-					gridString += "║"
-				} else if delim {
-					gridString += "═"
-				} else {
-					gridString += "┼"
-				}
-
-			case 3:
-				if (i+1)%3 == 0 {
-					gridString += "╩"
-				} else {
-					gridString += "═"
-				}
-
-			}
+		if (i + 1) == 9 {
+			gridBuilder.WriteRune(end)
+		} else if (i+1)%3 == 0 {
+			gridBuilder.WriteRune(blockSeparator)
 		} else {
-			switch part {
-			case 1:
-				gridString += "╗"
-			case 2:
-				if delim {
-					gridString += "╣"
-				} else {
-					gridString += "║"
-				}
-			case 3:
-				gridString += "╝"
-			}
+			gridBuilder.WriteRune(numberSeparator)
 		}
 	}
 
-	return gridString
+	return gridBuilder.String()
+}
+
+// Returns the upper part of the sudoku grid.
+func upperGridToString() string {
+	return gridToString("╔══╦╗")
+}
+
+// Returns the middle part of the sudoku grid.
+func middleGridToString() string {
+	return gridToString("║─┼║╣")
+}
+
+// Returns the middle (delimited) part of the sudoku grid.
+func middleDelimitedGridToString() string {
+	return gridToString("╠══╬╣")
+}
+
+// Returns the lower part of the sudoku grid.
+func lowerGridToString() string {
+	return gridToString("╚══╩╝")
 }
 
 // Returns the given sudoku in String format.
 func PrintGame(game Game) string {
-	var delim bool
-
 	cursor_x := game.cursor_x
 	cursor_y := game.cursor_y
 	sudoku := game.sudoku
@@ -126,18 +102,14 @@ func PrintGame(game Game) string {
 	}
 
 	selectedValue, _ := sudoku.GetValue(cursor_y, cursor_x)
-	sudokuString := printGridPart(1, 9, true) + "\n"
+
+	// Draw the upper part of the grid first.
+	sudokuString := upperGridToString() + "\n"
 
 	for i, row := range sudoku.GetValues() {
 
 		// Print the current row values.
 		for j := 0; j < len(row); j++ {
-
-			if (i+1)%3 == 0 {
-				delim = true
-			} else {
-				delim = false
-			}
 
 			if (j == 0) || (j%3 == 0) {
 				sudokuString += "║ "
@@ -184,11 +156,12 @@ func PrintGame(game Game) string {
 			}
 		}
 
-		// Depending on the row, print the corresponding grid part.
-		if i < 8 {
-			sudokuString += printGridPart(2, 9, delim) + "\n"
+		if i+1 == 9 {
+			sudokuString += lowerGridToString() + "\n"
+		} else if (i+1)%3 == 0 {
+			sudokuString += middleDelimitedGridToString() + "\n"
 		} else {
-			sudokuString += printGridPart(3, 9, delim) + "\n"
+			sudokuString += middleGridToString() + "\n"
 		}
 	}
 
