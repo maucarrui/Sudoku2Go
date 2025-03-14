@@ -9,14 +9,14 @@ import (
 
 type Sudoku = model.Sudoku
 type SudokuError = model.SudokuError
+type Cursor = model.Cursor
 
 type StringSet = internal.StringSet
 
 type GameState int64
 
 type Game struct {
-	cursor_x      int
-	cursor_y      int
+	cursor        *Cursor
 	initialSudoku *Sudoku
 	sudoku        *Sudoku
 	error         *SudokuError
@@ -43,8 +43,7 @@ func NewGame() Game {
 	s, _ := model.NewSudoku(nonCompleteSudoku)
 
 	return Game{
-		cursor_x:      0,
-		cursor_y:      0,
+		cursor:        model.NewCursor(),
 		initialSudoku: i,
 		sudoku:        s,
 		error:         nil,
@@ -72,25 +71,13 @@ func (game *Game) MoveCursor(direction string) {
 	)
 
 	if upKeys.Contains(direction) {
-		// Move up.
-		if game.cursor_y > 0 {
-			game.cursor_y--
-		}
+		game.cursor.MoveUp()
 	} else if downKeys.Contains(direction) {
-		// Move down.
-		if game.cursor_y < 8 {
-			game.cursor_y++
-		}
+		game.cursor.MoveDown()
 	} else if leftKeys.Contains(direction) {
-		// Move left.
-		if game.cursor_x > 0 {
-			game.cursor_x--
-		}
+		game.cursor.MoveLeft()
 	} else if rightKeys.Contains(direction) {
-		// Move right.
-		if game.cursor_x < 8 {
-			game.cursor_x++
-		}
+		game.cursor.MoveRight()
 	}
 
 	game.error = nil
@@ -100,8 +87,8 @@ func (game *Game) AddValue(key string) {
 	// Parse the string into an integer.
 	value, _ := strconv.Atoi(key)
 
-	row := game.cursor_y
-	col := game.cursor_x
+	row := game.cursor.Row
+	col := game.cursor.Col
 
 	if val, _ := game.initialSudoku.GetValue(row, col); val != 0 {
 		game.message = "Can't overwrite initial value"
@@ -114,8 +101,8 @@ func (game *Game) AddValue(key string) {
 }
 
 func (game *Game) RemoveValue() {
-	row := game.cursor_y
-	col := game.cursor_x
+	row := game.cursor.Row
+	col := game.cursor.Col
 
 	if val, _ := game.initialSudoku.GetValue(row, col); val != 0 {
 		return

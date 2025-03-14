@@ -73,8 +73,8 @@ func (game Game) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Check if game has been completed.
 		if game.IsComplete() {
 			// Move the cursor out of bounds to show the complete sudoku.
-			game.cursor_x = -1
-			game.cursor_y = -1
+			game.cursor.Row = -1
+			game.cursor.Col = -1
 
 			return game, tea.Quit
 		}

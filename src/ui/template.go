@@ -87,8 +87,8 @@ func lowerGridToString() string {
 
 // Returns the given sudoku in String format.
 func PrintGame(game Game) string {
-	cursor_x := game.cursor_x
-	cursor_y := game.cursor_y
+	cursor_x := game.cursor.Col
+	cursor_y := game.cursor.Row
 	sudoku := game.sudoku
 	initialSudoku := game.initialSudoku
 	error := game.error
