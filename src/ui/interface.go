@@ -87,7 +87,7 @@ func (game Game) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (game Game) View() string {
-	sudoku := PrintGame(game)
+	sudoku := gameToString(game)
 	sudoku += "Elapsed Time: " + PrintElapsedTime(game.timer.Elapsed()) + "\n"
 
 	sudoku = sudokuStyle(sudoku)

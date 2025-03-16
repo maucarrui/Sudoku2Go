@@ -61,6 +61,7 @@ func gridToString(gridStructure string) string {
 			gridBuilder.WriteRune(numberSeparator)
 		}
 	}
+	gridBuilder.WriteString("\n")
 
 	return gridBuilder.String()
 }
@@ -72,7 +73,7 @@ func upperGridToString() string {
 
 // Returns the middle part of the sudoku grid.
 func middleGridToString() string {
-	return gridToString("║─┼║╣")
+	return gridToString("║─┼║║")
 }
 
 // Returns the middle (delimited) part of the sudoku grid.
@@ -85,87 +86,153 @@ func lowerGridToString() string {
 	return gridToString("╚══╩╝")
 }
 
-// Returns the given sudoku in String format.
-func PrintGame(game Game) string {
-	cursor_x := game.cursor.Col
-	cursor_y := game.cursor.Row
-	sudoku := game.sudoku
-	initialSudoku := game.initialSudoku
-	error := game.error
-	blinking := game.blinking
+func isCursorOnValue(game Game, row, col int) bool {
+	return (row == game.cursor.Row) && (col == game.cursor.Col)
+}
 
-	conflict_x := -1
-	conflict_y := -1
-	if error != nil {
-		conflict_x = error.GetConflictColumn()
-		conflict_y = error.GetConflictRow()
+func isConflictingValue(game Game, row, col int) bool {
+	return game.error != nil &&
+		game.error.GetConflictRow() == row &&
+		game.error.GetConflictColumn() == col
+}
+
+func isMatchingValue(game Game, row, col int) bool {
+	selectedValue, _ := game.sudoku.GetValue(game.cursor.Row, game.cursor.Col)
+	currentValue, _ := game.sudoku.GetValue(row, col)
+	return selectedValue == currentValue
+}
+
+func isInitialValue(game Game, row, col int) bool {
+	value, _ := game.initialSudoku.GetValue(row, col)
+	return value != 0
+}
+
+func isPlacedValue(game Game, row, col int) bool {
+	initialValue, _ := game.initialSudoku.GetValue(row, col)
+	placedValue, _ := game.sudoku.GetValue(row, col)
+
+	return initialValue == 0 && placedValue != 0
+}
+
+func isEmptyValue(game Game, row, col int) bool {
+	value, _ := game.sudoku.GetValue(row, col)
+	return value == 0
+}
+
+func selectedValueToString(game Game, row, col int) string {
+	value, _ := game.sudoku.GetValue(row, col)
+	str := strconv.Itoa(value)
+	if game.blinking {
+		return selectedValueStyleBlinking(str)
+	} else {
+		return selectedValueStyle(str)
+	}
+}
+
+func cursorToString(game Game) string {
+	if game.blinking {
+		return selectedValueStyleBlinking("█")
+	} else {
+		return selectedValueStyle("█")
+	}
+}
+
+func selectionToString(game Game, row, col int) string {
+	value, _ := game.sudoku.GetValue(row, col)
+	if value != 0 {
+		return selectedValueToString(game, row, col)
+	} else {
+		return cursorToString(game)
+	}
+}
+
+func conflictValueToString(game Game, row, col int) string {
+	value, _ := game.sudoku.GetValue(row, col)
+	str := strconv.Itoa(value)
+	return conflictValueStyle(str)
+}
+
+func matchingValueToString(game Game, row, col int) string {
+	value, _ := game.sudoku.GetValue(row, col)
+	if value != 0 {
+		str := strconv.Itoa(value)
+		return matchingValuesStyle(str)
+	} else {
+		return " "
+	}
+}
+
+func initialValueToString(game Game, row, col int) string {
+	value, _ := game.sudoku.GetValue(row, col)
+	str := strconv.Itoa(value)
+	return initialValueStyle(str)
+}
+
+func placedValueToString(game Game, row, col int) string {
+	value, _ := game.sudoku.GetValue(row, col)
+	str := strconv.Itoa(value)
+	return placedValuesStyle(str)
+}
+
+func emptyValueToString() string {
+	return " "
+}
+
+func paintValue(game Game, row, col int) string {
+	if isCursorOnValue(game, row, col) {
+		return selectionToString(game, row, col)
+	} else if isConflictingValue(game, row, col) {
+		return conflictValueToString(game, row, col)
+	} else if isMatchingValue(game, row, col) {
+		return matchingValueToString(game, row, col)
+	} else if isInitialValue(game, row, col) {
+		return initialValueToString(game, row, col)
+	} else if isPlacedValue(game, row, col) {
+		return placedValueToString(game, row, col)
+	} else if isEmptyValue(game, row, col) {
+		return emptyValueToString()
 	}
 
-	selectedValue, _ := sudoku.GetValue(cursor_y, cursor_x)
+	return ""
+}
 
-	// Draw the upper part of the grid first.
-	sudokuString := upperGridToString() + "\n"
+func rowToString(game Game, row int) string {
+	rowStr := "║"
 
-	for i, row := range sudoku.GetValues() {
+	for col := 0; col < 9; col++ {
 
-		// Print the current row values.
-		for j := 0; j < len(row); j++ {
+		rowStr += " "
+		rowStr += paintValue(game, row, col)
+		rowStr += " "
 
-			if (j == 0) || (j%3 == 0) {
-				sudokuString += "║ "
-			} else {
-				sudokuString += "│ "
-			}
-
-			value := row[j]
-			strValue := strconv.Itoa(row[j])
-
-			if (cursor_x == j) && (cursor_y == i) {
-				if row[j] != 0 {
-					if blinking {
-						sudokuString += selectedValueStyleBlinking(strValue)
-					} else {
-						sudokuString += selectedValueStyle(strValue)
-					}
-				} else {
-					if blinking {
-						sudokuString += selectedValueStyleBlinking("█")
-					} else {
-						sudokuString += selectedValueStyle("█")
-					}
-				}
-			} else if (conflict_x == j) && (conflict_y == i) {
-				sudokuString += conflictValueStyle(strValue)
-			} else if selectedValue == value && value != 0 {
-				sudokuString += matchingValuesStyle(strValue)
-			} else if value != 0 {
-				if initialValue, _ := initialSudoku.GetValue(i, j); initialValue != 0 {
-					sudokuString += initialValueStyle(strValue)
-				} else {
-					sudokuString += placedValuesStyle(strValue)
-				}
-
-			} else {
-				sudokuString += " "
-			}
-
-			sudokuString += " "
-
-			if j == len(row)-1 {
-				sudokuString += "║\n"
-			}
-		}
-
-		if i+1 == 9 {
-			sudokuString += lowerGridToString() + "\n"
-		} else if (i+1)%3 == 0 {
-			sudokuString += middleDelimitedGridToString() + "\n"
+		if (col+1)%3 == 0 {
+			rowStr += "║"
 		} else {
-			sudokuString += middleGridToString() + "\n"
+			rowStr += "│"
 		}
 	}
 
-	return sudokuString
+	return rowStr + "\n"
+}
+
+func gameToString(game Game) string {
+	str := ""
+
+	for row := 0; row < 9; row++ {
+
+		if row == 0 {
+			str += upperGridToString()
+		} else if row%3 == 0 {
+			str += middleDelimitedGridToString()
+		} else {
+			str += middleGridToString()
+		}
+
+		str += rowToString(game, row)
+	}
+
+	str += lowerGridToString()
+	return str
 }
 
 func BlinkingEnabledToString(game Game) string {
